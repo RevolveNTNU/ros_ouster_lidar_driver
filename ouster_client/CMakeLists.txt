@@ -36,7 +36,7 @@ add_library(OusterSDK::ouster_client ALIAS ouster_client)
 if(WIN32)
   target_link_libraries(ouster_client PUBLIC ws2_32)
 endif()
-target_include_directories(ouster_client PUBLIC
+target_include_directories(ouster_client SYSTEM PUBLIC
   $<INSTALL_INTERFACE:include>
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>)
 target_include_directories(ouster_client SYSTEM PUBLIC

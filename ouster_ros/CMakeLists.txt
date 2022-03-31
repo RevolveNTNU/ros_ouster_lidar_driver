@@ -24,7 +24,7 @@ find_package(
 
 # ==== Options ====
 set(CMAKE_CXX_STANDARD 14)
-add_compile_options(-Wall -Wextra -Werror -Wno-error=deprecated-declarations)
+add_compile_options(-Wall -Wextra -Werror -Wno-deprecated-declarations)
 option(CMAKE_POSITION_INDEPENDENT_CODE "Build position independent code." ON)
 
 # ==== Catkin ====
@@ -62,7 +62,7 @@ target_compile_definitions(ouster_client PUBLIC EIGEN_MAX_ALIGN_BYTES=32)
 set(BUILD_SHARED_LIBS ${_SAVE_BUILD_SHARED_LIBS})
 
 # catkin adds all include dirs to a single variable, don't try to use targets
-include_directories(${_ouster_ros_INCLUDE_DIRS} ${catkin_INCLUDE_DIRS})
+include_directories(SYSTEM ${_ouster_ros_INCLUDE_DIRS} ${catkin_INCLUDE_DIRS})
 
 # use only MPL-licensed parts of eigen
 add_definitions(-DEIGEN_MPL2_ONLY)
