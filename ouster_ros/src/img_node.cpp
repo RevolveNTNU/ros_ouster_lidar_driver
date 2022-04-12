@@ -185,7 +185,7 @@ int main(int argc, char** argv) {
 
     // image processing
     auto pc1_sub = nh.subscribe<sensor_msgs::PointCloud2>(
-        topic("points", 0), 100, first_cloud_handler);
+        "/sensor/lidar_0", 100, first_cloud_handler);
     auto pc2_sub = nh.subscribe<sensor_msgs::PointCloud2>(
         topic("points", 1), 100, second_cloud_handler);
 

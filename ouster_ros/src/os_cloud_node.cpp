@@ -56,15 +56,15 @@ int main(int argc, char** argv) {
 
     auto imu_pub = nh.advertise<sensor_msgs::Imu>("imu", 100);
 
-    auto img_suffix = [](int ind) {
-        if (ind == 0) return std::string();
-        return std::to_string(ind + 1);  // need second return to return 2
-    };
+    // auto img_suffix = [](int ind) {
+    //     if (ind == 0) return std::string();
+    //     return std::to_string(ind + 1);  // need second return to return 2
+    // };
 
     auto lidar_pubs = std::vector<ros::Publisher>();
     for (int i = 0; i < n_returns; i++) {
         auto pub = nh.advertise<sensor_msgs::PointCloud2>(
-            std::string("points") + img_suffix(i), 10);
+            "/sensor/lidar_0", 10);
         lidar_pubs.push_back(pub);
     }
 
