@@ -32,8 +32,8 @@ int main(int argc, char** argv) {
     auto tf_prefix = nh.param("tf_prefix", std::string{});
     if (!tf_prefix.empty() && tf_prefix.back() != '/') tf_prefix.append("/");
     auto sensor_frame = tf_prefix + "os_sensor";
-    auto imu_frame = tf_prefix + "os_imu";
-    auto lidar_frame = tf_prefix + "os_lidar";
+    auto imu_frame = tf_prefix + "imu_1";
+    auto lidar_frame = tf_prefix + "lidar_0";
 
     ouster_ros::OSConfigSrv cfg{};
     auto client = nh.serviceClient<ouster_ros::OSConfigSrv>("os_config");
@@ -54,7 +54,7 @@ int main(int argc, char** argv) {
             : 2;
     auto pf = sensor::get_format(info);
 
-    auto imu_pub = nh.advertise<sensor_msgs::Imu>("imu", 100);
+    auto imu_pub = nh.advertise<sensor_msgs::Imu>("/sensor/imu_1", 100);
 
     // auto img_suffix = [](int ind) {
     //     if (ind == 0) return std::string();
