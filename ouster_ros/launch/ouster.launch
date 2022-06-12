@@ -13,7 +13,7 @@
   <arg name="tf_prefix" default="" doc="namespace for tf transforms"/>
   <arg name="udp_profile_lidar" default="LEGACY" doc="lidar packet profile: LEGACY, RNG19_RFL8_SIG16_NIR16_DUAL"/>
 
-  <node pkg="ouster_ros" name="os_node" type="os_node" output="screen" required="true">
+  <node pkg="ouster_ros" name="os_node" type="os_node" output="screen" required="false">
     <param name="~/lidar_mode" type="string" value="$(arg lidar_mode)"/>
     <param name="~/timestamp_mode" type="string" value="$(arg timestamp_mode)"/>
     <param name="~/replay" value="$(arg replay)"/>
@@ -25,15 +25,15 @@
     <param name="~/udp_profile_lidar" value="$(arg udp_profile_lidar)"/>
   </node>
 
-  <node pkg="ouster_ros" type="os_cloud_node" name="os_cloud_node" output="screen" required="true">
+  <node pkg="ouster_ros" type="os_cloud_node" name="os_cloud_node" output="screen" required="false">
     <remap from="~/os_config" to="/os_node/os_config"/>
     <remap from="~/lidar_packets" to="/os_node/lidar_packets"/>
     <remap from="~/imu_packets" to="/os_node/imu_packets"/>
     <param name="~/tf_prefix" value="$(arg tf_prefix)"/>
   </node>
 
-  <node if="$(arg viz)" pkg="rviz" name="rviz" type="rviz" args="$(arg rviz_config)" output="screen" required="true" />
-  <node if="$(arg viz)" pkg="ouster_ros" name="img_node" type="img_node" output="screen" required="true">
+  <node if="$(arg viz)" pkg="rviz" name="rviz" type="rviz" args="$(arg rviz_config)" output="screen" required="false" />
+  <node if="$(arg viz)" pkg="ouster_ros" name="img_node" type="img_node" output="screen" required="false">
     <remap from="~/os_config" to="/os_node/os_config"/>
     <remap from="~/points" to="/os_cloud_node/points"/>
     <remap from="~/points2" to="/os_cloud_node/points2"/>
