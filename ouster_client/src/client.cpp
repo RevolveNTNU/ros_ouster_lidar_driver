@@ -167,8 +167,7 @@ SOCKET cfg_socket(const char* addr) {
         hints.ai_flags = 0;
         ret = getaddrinfo(addr, "7501", &hints, &info_start);
         if (ret != 0) {
-            std::cerr << "cfg getaddrinfo(): " << gai_strerror(ret)
-                      << std::endl;
+            throw std::runtime_error("cfg getaddrinfo(): " + std::string{gai_strerror(ret)});
             return SOCKET_ERROR;
         }
     }
