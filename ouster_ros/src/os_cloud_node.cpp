@@ -29,6 +29,10 @@ int main(int argc, char** argv) {
     ros::init(argc, argv, "os_cloud_node");
     ros::NodeHandle nh("~");
 
+    TimestampTranslator timestamp_translator{
+        {std::chrono::seconds{2}, 1,
+         TimestampTranslator::Method::kPpsToSystemClock}};
+
     auto tf_prefix = nh.param("tf_prefix", std::string{});
     if (!tf_prefix.empty() && tf_prefix.back() != '/') tf_prefix.append("/");
     auto sensor_frame = tf_prefix + "os_sensor";
@@ -63,8 +67,8 @@ int main(int argc, char** argv) {
 
     auto lidar_pubs = std::vector<ros::Publisher>();
     for (int i = 0; i < n_returns; i++) {
-        auto pub = nh.advertise<sensor_msgs::PointCloud2>(
-            "/sensor/lidar_0", 10);
+        auto pub =
+            nh.advertise<sensor_msgs::PointCloud2>("/sensor/lidar_0", 10);
         lidar_pubs.push_back(pub);
     }
 
@@ -85,7 +89,8 @@ int main(int argc, char** argv) {
                 for (int i = 0; i < n_returns; i++) {
                     scan_to_cloud(xyz_lut, h->timestamp, ls, cloud, i);
                     lidar_pubs[i].publish(ouster_ros::cloud_to_cloud_msg(
-                        cloud, h->timestamp, sensor_frame));
+                        cloud, h->timestamp, sensor_frame,
+                        timestamp_translator));
                 }
             }
         }

@@ -20,7 +20,8 @@ find_package(
              pcl_conversions
              roscpp
              tf2
-             tf2_ros)
+             tf2_ros
+             aurora_interface)
 
 # ==== Options ====
 set(CMAKE_CXX_STANDARD 14)

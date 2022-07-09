@@ -14,6 +14,7 @@
 #include <chrono>
 #include <string>
 
+#include "aurora_interface/timestamp_translator.h"
 #include "ouster/client.h"
 #include "ouster/lidar_scan.h"
 #include "ouster/types.h"
@@ -73,10 +74,13 @@ void scan_to_cloud(const ouster::XYZLut& xyz_lut,
  * @param cloud the PCL point cloud to convert
  * @param timestamp the timestamp to give the resulting ROS message
  * @param frame the frame to set in the resulting ROS message
+ * @param timestamp_translator class used for converting PPS timestamps to Unix
+ * system time
  * @return a ROS message containing the point cloud
  */
-sensor_msgs::PointCloud2 cloud_to_cloud_msg(const Cloud& cloud, ns timestamp,
-                                            const std::string& frame);
+sensor_msgs::PointCloud2 cloud_to_cloud_msg(
+    const Cloud& cloud, ns timestamp, const std::string& frame,
+    TimestampTranslator& timestamp_translator);
 
 /**
  * Convert transformation matrix return by sensor to ROS transform
