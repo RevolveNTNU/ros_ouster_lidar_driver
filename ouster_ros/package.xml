@@ -13,6 +13,7 @@
   <depend>geometry_msgs</depend>
   <depend>tf2_ros</depend>
   <depend>aurora_interface</depend>
+  <depend>rdv_msgs</depend>
 
   <build_depend>libjsoncpp-dev</build_depend>
   <build_depend>eigen</build_depend>

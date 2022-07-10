@@ -14,6 +14,7 @@ find_package(tf2_eigen REQUIRED)
 find_package(
   catkin REQUIRED
   COMPONENTS message_generation
+             rdv_msgs
              std_msgs
              sensor_msgs
              geometry_msgs

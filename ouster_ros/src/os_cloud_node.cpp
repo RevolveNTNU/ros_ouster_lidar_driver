@@ -3,6 +3,7 @@
  * @brief Example node to publish point clouds and imu topics
  */
 
+#include <rdv_msgs/PpsCounterReset.h>
 #include <ros/console.h>
 #include <ros/ros.h>
 #include <ros/service.h>
@@ -28,10 +29,6 @@ namespace sensor = ouster::sensor;
 int main(int argc, char** argv) {
     ros::init(argc, argv, "os_cloud_node");
     ros::NodeHandle nh("~");
-
-    TimestampTranslator timestamp_translator{
-        {std::chrono::seconds{2}, 1,
-         TimestampTranslator::Method::kPpsToSystemClock}};
 
     auto tf_prefix = nh.param("tf_prefix", std::string{});
     if (!tf_prefix.empty() && tf_prefix.back() != '/') tf_prefix.append("/");
@@ -79,12 +76,30 @@ int main(int argc, char** argv) {
 
     ouster::ScanBatcher batch(W, pf);
 
+    TimestampTranslator timestamp_translator{
+        {std::chrono::seconds{2}, 1,
+         TimestampTranslator::Method::kPpsToSystemClock}};
+    ros::ServiceClient pps_reset_client = nh.serviceClient<rdv_msgs::PpsCounterReset>(
+        "/vehicle_interface/aurora_interface/reset_pps_counter");
+    bool has_reset_pps_counter{false};
+
     auto lidar_handler = [&](const PacketMsg& pm) mutable {
+        using namespace std::chrono_literals;
         if (batch(pm.buf.data(), ls)) {
             auto h = std::find_if(
                 ls.headers.begin(), ls.headers.end(), [](const auto& h) {
                     return h.timestamp != std::chrono::nanoseconds{0};
                 });
+            if (!has_reset_pps_counter && 300ms < h->timestamp &&
+                h->timestamp < 500ms) {
+                rdv_msgs::PpsCounterReset srv;
+                if (pps_reset_client.call(srv)) {
+                    timestamp_translator.resetPpsSecondCounter(
+                        std::chrono::nanoseconds{srv.response.time_of_reset});
+                    has_reset_pps_counter = true;
+                    ROS_INFO("PPS second counter reset successful");
+                }
+            }
             if (h != ls.headers.end()) {
                 for (int i = 0; i < n_returns; i++) {
                     scan_to_cloud(xyz_lut, h->timestamp, ls, cloud, i);
