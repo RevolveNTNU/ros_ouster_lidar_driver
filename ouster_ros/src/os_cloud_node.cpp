@@ -79,8 +79,9 @@ int main(int argc, char** argv) {
     TimestampTranslator timestamp_translator{
         {std::chrono::seconds{2}, 1,
          TimestampTranslator::Method::kPpsToSystemClock}};
-    ros::ServiceClient pps_reset_client = nh.serviceClient<rdv_msgs::PpsCounterReset>(
-        "/vehicle_interface/aurora_interface/reset_pps_counter");
+    ros::ServiceClient pps_reset_client =
+        nh.serviceClient<rdv_msgs::PpsCounterReset>(
+            "/vehicle_interface/aurora_interface/reset_pps_counter");
     bool has_reset_pps_counter{false};
 
     auto lidar_handler = [&](const PacketMsg& pm) mutable {
@@ -92,12 +93,15 @@ int main(int argc, char** argv) {
                 });
             if (!has_reset_pps_counter && 300ms < h->timestamp &&
                 h->timestamp < 500ms) {
-                rdv_msgs::PpsCounterReset srv;
-                if (pps_reset_client.call(srv)) {
-                    timestamp_translator.resetPpsSecondCounter(
-                        std::chrono::nanoseconds{srv.response.time_of_reset});
-                    has_reset_pps_counter = true;
-                    ROS_INFO("PPS second counter reset successful");
+                if (pps_reset_client.exists()) {
+                    rdv_msgs::PpsCounterReset srv;
+                    if (pps_reset_client.call(srv)) {
+                        timestamp_translator.resetPpsSecondCounter(
+                            std::chrono::nanoseconds{
+                                srv.response.time_of_reset});
+                        has_reset_pps_counter = true;
+                        ROS_INFO("PPS second counter reset successful");
+                    }
                 }
             }
             if (h != ls.headers.end()) {
