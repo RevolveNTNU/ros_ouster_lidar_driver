@@ -20,6 +20,7 @@
 #include "ouster_ros/OSConfigSrv.h"
 #include "ouster_ros/PacketMsg.h"
 #include "ouster_ros/ros.h"
+#include "std_srvs/Trigger.h"
 
 using PacketMsg = ouster_ros::PacketMsg;
 using Cloud = ouster_ros::Cloud;
@@ -83,6 +84,19 @@ int main(int argc, char** argv) {
         nh.serviceClient<rdv_msgs::PpsCounterReset>(
             "/vehicle_interface/aurora_interface/reset_pps_counter");
     bool has_reset_pps_counter{false};
+
+    auto trigger_reset_pps_second_counter =
+        [&](std_srvs::Trigger::Request&, std_srvs::Trigger::Response& res) {
+            has_reset_pps_counter = false;
+            res.success = true;
+            return static_cast<bool>(res.success);
+        };
+
+    ros::ServiceServer pps_reset_client_trigger =
+        nh.advertiseService<std_srvs::Trigger::Request,
+                            std_srvs::Trigger::Response>(
+            "/ouster_driver/reset_pps_counter_trigger",
+            trigger_reset_pps_second_counter);
 
     auto lidar_handler = [&](const PacketMsg& pm) mutable {
         using namespace std::chrono_literals;
