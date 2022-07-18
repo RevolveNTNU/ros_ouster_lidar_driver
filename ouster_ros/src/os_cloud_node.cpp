@@ -82,7 +82,7 @@ int main(int argc, char** argv) {
          TimestampTranslator::Method::kPpsToSystemClock}};
     ros::ServiceClient pps_reset_client =
         nh.serviceClient<rdv_msgs::PpsCounterReset>(
-            "/vehicle_interface/aurora_interface/reset_pps_counter");
+            "/vehicle_interface/reset_pps_counter");
     bool has_reset_pps_counter{false};
 
     auto trigger_reset_pps_second_counter =
@@ -95,7 +95,7 @@ int main(int argc, char** argv) {
     ros::ServiceServer pps_reset_client_trigger =
         nh.advertiseService<std_srvs::Trigger::Request,
                             std_srvs::Trigger::Response>(
-            "/ouster_driver/reset_pps_counter_trigger",
+            "/lidar_driver/reset_pps_counter_trigger",
             trigger_reset_pps_second_counter);
 
     auto lidar_handler = [&](const PacketMsg& pm) mutable {
