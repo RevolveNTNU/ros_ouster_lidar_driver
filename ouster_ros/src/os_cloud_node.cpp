@@ -138,14 +138,15 @@ int main(int argc, char** argv) {
     auto imu_packet_sub = nh.subscribe<PacketMsg, const PacketMsg&>(
         "imu_packets", 100, imu_handler);
 
+    // We have struggled to listening to static transforms from multiple sources when playing bags.
     // publish transforms
-    tf2_ros::StaticTransformBroadcaster tf_bcast{};
+    // tf2_ros::StaticTransformBroadcaster tf_bcast{};
 
-    tf_bcast.sendTransform(ouster_ros::transform_to_tf_msg(
-        info.imu_to_sensor_transform, sensor_frame, imu_frame));
+    // tf_bcast.sendTransform(ouster_ros::transform_to_tf_msg(
+    //     info.imu_to_sensor_transform, sensor_frame, imu_frame));
 
-    tf_bcast.sendTransform(ouster_ros::transform_to_tf_msg(
-        info.lidar_to_sensor_transform, sensor_frame, lidar_frame));
+    // tf_bcast.sendTransform(ouster_ros::transform_to_tf_msg(
+    //     info.lidar_to_sensor_transform, sensor_frame, lidar_frame));
 
     ros::spin();
 
