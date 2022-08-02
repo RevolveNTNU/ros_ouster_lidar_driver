@@ -105,8 +105,9 @@ int main(int argc, char** argv) {
                 ls.headers.begin(), ls.headers.end(), [](const auto& h) {
                     return h.timestamp != std::chrono::nanoseconds{0};
                 });
-            if (!has_reset_pps_counter && 300ms < h->timestamp &&
-                h->timestamp < 500ms) {
+            auto pps_time{h->timestamp % 1s};
+            if (!has_reset_pps_counter && 300ms < pps_time &&
+                pps_time < 500ms) {
                 if (pps_reset_client.exists()) {
                     rdv_msgs::PpsCounterReset srv;
                     if (pps_reset_client.call(srv)) {
@@ -120,10 +121,9 @@ int main(int argc, char** argv) {
             }
             if (h != ls.headers.end()) {
                 for (int i = 0; i < n_returns; i++) {
-                    scan_to_cloud(xyz_lut, h->timestamp, ls, cloud, i);
+                    scan_to_cloud(xyz_lut, pps_time, ls, cloud, i);
                     lidar_pubs[i].publish(ouster_ros::cloud_to_cloud_msg(
-                        cloud, h->timestamp, sensor_frame,
-                        timestamp_translator));
+                        cloud, pps_time, sensor_frame, timestamp_translator));
                 }
             }
         }
@@ -138,9 +138,9 @@ int main(int argc, char** argv) {
     auto imu_packet_sub = nh.subscribe<PacketMsg, const PacketMsg&>(
         "imu_packets", 100, imu_handler);
 
-    // We have struggled to listening to static transforms from multiple sources when playing bags.
-    // publish transforms
-    // tf2_ros::StaticTransformBroadcaster tf_bcast{};
+    // We have struggled to listening to static transforms from multiple sources
+    // when playing bags. publish transforms tf2_ros::StaticTransformBroadcaster
+    // tf_bcast{};
 
     // tf_bcast.sendTransform(ouster_ros::transform_to_tf_msg(
     //     info.imu_to_sensor_transform, sensor_frame, imu_frame));
