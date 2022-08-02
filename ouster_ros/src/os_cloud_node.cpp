@@ -3,6 +3,7 @@
  * @brief Example node to publish point clouds and imu topics
  */
 
+#include <rdv_msgs/PpsCounterReset.h>
 #include <ros/console.h>
 #include <ros/ros.h>
 #include <ros/service.h>
@@ -19,6 +20,7 @@
 #include "ouster_ros/OSConfigSrv.h"
 #include "ouster_ros/PacketMsg.h"
 #include "ouster_ros/ros.h"
+#include "std_srvs/Trigger.h"
 
 using PacketMsg = ouster_ros::PacketMsg;
 using Cloud = ouster_ros::Cloud;
@@ -63,8 +65,8 @@ int main(int argc, char** argv) {
 
     auto lidar_pubs = std::vector<ros::Publisher>();
     for (int i = 0; i < n_returns; i++) {
-        auto pub = nh.advertise<sensor_msgs::PointCloud2>(
-            "/sensor/lidar_0", 10);
+        auto pub =
+            nh.advertise<sensor_msgs::PointCloud2>("/sensor/lidar_0", 10);
         lidar_pubs.push_back(pub);
     }
 
@@ -75,17 +77,53 @@ int main(int argc, char** argv) {
 
     ouster::ScanBatcher batch(W, pf);
 
+    TimestampTranslator timestamp_translator{
+        {std::chrono::seconds{2}, 1,
+         TimestampTranslator::Method::kPpsToSystemClock}};
+    ros::ServiceClient pps_reset_client =
+        nh.serviceClient<rdv_msgs::PpsCounterReset>(
+            "/vehicle_interface/reset_pps_counter");
+    bool has_reset_pps_counter{false};
+
+    auto trigger_reset_pps_second_counter =
+        [&](std_srvs::Trigger::Request&, std_srvs::Trigger::Response& res) {
+            has_reset_pps_counter = false;
+            res.success = true;
+            return static_cast<bool>(res.success);
+        };
+
+    ros::ServiceServer pps_reset_client_trigger =
+        nh.advertiseService<std_srvs::Trigger::Request,
+                            std_srvs::Trigger::Response>(
+            "/lidar_driver/reset_pps_counter_trigger",
+            trigger_reset_pps_second_counter);
+
     auto lidar_handler = [&](const PacketMsg& pm) mutable {
+        using namespace std::chrono_literals;
         if (batch(pm.buf.data(), ls)) {
             auto h = std::find_if(
                 ls.headers.begin(), ls.headers.end(), [](const auto& h) {
                     return h.timestamp != std::chrono::nanoseconds{0};
                 });
+            auto pps_time{h->timestamp % 1s};
+            if (!has_reset_pps_counter && 300ms < pps_time &&
+                pps_time < 500ms) {
+                if (pps_reset_client.exists()) {
+                    rdv_msgs::PpsCounterReset srv;
+                    if (pps_reset_client.call(srv)) {
+                        timestamp_translator.resetPpsSecondCounter(
+                            std::chrono::nanoseconds{
+                                srv.response.time_of_reset});
+                        has_reset_pps_counter = true;
+                        ROS_INFO("PPS second counter reset successful");
+                    }
+                }
+            }
             if (h != ls.headers.end()) {
                 for (int i = 0; i < n_returns; i++) {
-                    scan_to_cloud(xyz_lut, h->timestamp, ls, cloud, i);
+                    scan_to_cloud(xyz_lut, pps_time, ls, cloud, i);
                     lidar_pubs[i].publish(ouster_ros::cloud_to_cloud_msg(
-                        cloud, h->timestamp, sensor_frame));
+                        cloud, pps_time, sensor_frame, timestamp_translator));
                 }
             }
         }
@@ -100,9 +138,9 @@ int main(int argc, char** argv) {
     auto imu_packet_sub = nh.subscribe<PacketMsg, const PacketMsg&>(
         "imu_packets", 100, imu_handler);
 
-    // We have struggled to listening to static transforms from multiple sources when playing bags.
-    // publish transforms
-    // tf2_ros::StaticTransformBroadcaster tf_bcast{};
+    // We have struggled to listening to static transforms from multiple sources
+    // when playing bags. publish transforms tf2_ros::StaticTransformBroadcaster
+    // tf_bcast{};
 
     // tf_bcast.sendTransform(ouster_ros::transform_to_tf_msg(
     //     info.imu_to_sensor_transform, sensor_frame, imu_frame));
