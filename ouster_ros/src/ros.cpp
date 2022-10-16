@@ -143,6 +143,14 @@ sensor_msgs::PointCloud2 cloud_to_cloud_msg(
     pcl::toROSMsg(cloud, msg);
     msg.header.frame_id = frame;
     msg.header.stamp = timestamp_translator.getRosTime(ns{}, timestamp);
+    /* PPS time concept did not work out in practice on Aurora because the "time
+     * since PPS" data field of the INS data had illogical/unexpected values at
+     * somewhat high speed. When standing still it worked consistently, though.
+     * However, since it didn't work at somewhat high speed, R22 decided not to
+     * use it for reliability reasons, and use system time instead of clock
+     * synchronized time stamps, as shown below.
+     */
+    msg.header.stamp = ros::Time::now();
     return msg;
 }
 
